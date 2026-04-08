@@ -10,16 +10,19 @@ import (
 const version = "0.1.0"
 
 func main() {
-	if len(os.Args) < 2 {
-		printUsage()
-		os.Exit(1)
+	command := "switch"
+	if len(os.Args) >= 2 {
+		command = os.Args[1]
 	}
-
-	command := os.Args[1]
 
 	switch command {
 	case "switch":
 		if err := cmd.Switch(); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+	case "reload":
+		if err := cmd.Reload(); err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			os.Exit(1)
 		}
@@ -44,6 +47,7 @@ func printUsage() {
 
 Usage:
   ccs [switch]   Switch Claude Code profile (interactive)
+  ccs reload     Re-apply current profile (e.g. after editing settings.json)
   ccs current    Show active profile
   ccs version    Show version
   ccs help       Show this help
@@ -51,8 +55,8 @@ Usage:
 Shell Integration:
   Add this function to your .zshrc or .bashrc:
     ccs() {
-      if [[ $# -eq 0 ]] || [[ "$1" == "switch" ]]; then
-        eval "$(command ccs switch)"
+      if [[ $# -eq 0 ]] || [[ "$1" == "switch" ]] || [[ "$1" == "reload" ]]; then
+        eval "$(command ccs "$@")"
       else
         command ccs "$@"
       fi
@@ -60,6 +64,7 @@ Shell Integration:
 
   Then use:
     ccs           # Interactive switcher
+    ccs reload    # Re-apply current profile
     ccs current   # Show active profile
     ccs version   # Show version`)
 }

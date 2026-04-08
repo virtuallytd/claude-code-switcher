@@ -73,6 +73,11 @@ Profiles live in `~/.claude/profiles/<name>/`:
 - Merges `mcpServers` from profile's `settings.json` into active `~/.claude/settings.json`
 - Saves current profile to `~/.claude/.current-profile`
 
+**`ccs reload`**
+- Re-applies the currently active profile without going through the TUI
+- Useful after editing a profile's `settings.json` (e.g. adding a new MCP server)
+- Same effect as re-selecting the current profile in `ccs switch`
+
 **`ccs current`**
 - Shows active profile name and auth type
 - Reads from `~/.claude/.current-profile` state file
@@ -102,7 +107,11 @@ sudo mv ccs /usr/local/bin/
 **Add shell integration** to `~/.zshrc` or `~/.bashrc`:
 ```bash
 ccs() {
-  eval "$(command ccs switch)"
+  if [[ $# -eq 0 ]] || [[ "$1" == "switch" ]] || [[ "$1" == "reload" ]]; then
+    eval "$(command ccs "$@")"
+  else
+    command ccs "$@"
+  fi
 }
 ```
 
@@ -122,6 +131,8 @@ source ~/.zshrc
 - Edit `cmd/switch.go`
 - TUI model implements bubbletea's `tea.Model` interface (Init, Update, View)
 - Styles defined at package level using lipgloss
+
+**No automated tests exist** — the codebase relies on manual testing.
 
 **Testing profile discovery**:
 ```bash
@@ -146,8 +157,8 @@ go run . switch
 
 **Settings merging** (`internal/config/merge.go`):
 - Loads profile's `settings.json`
-- Reads active `~/.claude/settings.json`
-- Replaces `mcpServers` key while preserving other settings
+- Reads `~/.claude.json` (Claude Code's main config, NOT `~/.claude/settings.json`)
+- Replaces top-level `mcpServers` key while preserving all other state
 - Writes back with pretty-printed JSON
 
 **Keyring wrapper** (`internal/keyring/keyring.go`):

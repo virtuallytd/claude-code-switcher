@@ -8,7 +8,7 @@ import (
 	"github.com/adavis/ccs/internal/profile"
 )
 
-// MergeSettings merges MCP servers from profile settings into active settings.json
+// MergeSettings merges MCP servers from profile settings into ~/.claude.json
 func MergeSettings(profilePath string) error {
 	// Load profile settings
 	profileSettings, err := profile.LoadSettings(profilePath)
@@ -16,39 +16,34 @@ func MergeSettings(profilePath string) error {
 		return fmt.Errorf("failed to load profile settings: %w", err)
 	}
 
-	activeSettingsPath := profile.GetActiveSettingsPath()
+	claudeStatePath := profile.GetClaudeStatePath()
 
-	// Load active settings (or create empty if doesn't exist)
-	var activeSettings map[string]interface{}
-	data, err := os.ReadFile(activeSettingsPath)
+	// Load ~/.claude.json
+	data, err := os.ReadFile(claudeStatePath)
 	if err != nil {
-		if os.IsNotExist(err) {
-			activeSettings = make(map[string]interface{})
-		} else {
-			return fmt.Errorf("failed to read active settings: %w", err)
-		}
-	} else {
-		if err := json.Unmarshal(data, &activeSettings); err != nil {
-			return fmt.Errorf("failed to parse active settings: %w", err)
-		}
+		return fmt.Errorf("failed to read ~/.claude.json: %w", err)
 	}
 
-	// Merge mcpServers
+	var claudeState map[string]interface{}
+	if err := json.Unmarshal(data, &claudeState); err != nil {
+		return fmt.Errorf("failed to parse ~/.claude.json: %w", err)
+	}
+
+	// Update top-level mcpServers key
 	if profileSettings.MCPServers != nil {
-		activeSettings["mcpServers"] = profileSettings.MCPServers
+		claudeState["mcpServers"] = profileSettings.MCPServers
 	} else {
-		// Clear mcpServers if profile has none
-		delete(activeSettings, "mcpServers")
+		delete(claudeState, "mcpServers")
 	}
 
-	// Write back to active settings
-	output, err := json.MarshalIndent(activeSettings, "", "  ")
+	// Write back
+	output, err := json.MarshalIndent(claudeState, "", "  ")
 	if err != nil {
-		return fmt.Errorf("failed to marshal settings: %w", err)
+		return fmt.Errorf("failed to marshal ~/.claude.json: %w", err)
 	}
 
-	if err := os.WriteFile(activeSettingsPath, output, 0644); err != nil {
-		return fmt.Errorf("failed to write active settings: %w", err)
+	if err := os.WriteFile(claudeStatePath, output, 0600); err != nil {
+		return fmt.Errorf("failed to write ~/.claude.json: %w", err)
 	}
 
 	return nil

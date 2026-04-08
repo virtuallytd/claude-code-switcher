@@ -36,6 +36,15 @@ func GetProfilesDir() string {
 	return filepath.Join(home, ".claude", "profiles")
 }
 
+// GetClaudeStatePath returns the path to ~/.claude.json (Claude Code's main config)
+func GetClaudeStatePath() string {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return ""
+	}
+	return filepath.Join(home, ".claude.json")
+}
+
 // GetActiveSettingsPath returns the path to active settings.json
 func GetActiveSettingsPath() string {
 	home, err := os.UserHomeDir()
