@@ -1,0 +1,37 @@
+version: 2
+updates:
+  # Enable version updates for Go modules
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "go"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    groups:
+      # Group all patch and minor updates together
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+      # Group major updates separately for easier review
+      major:
+        update-types:
+          - "major"
+
+  # Enable version updates for GitHub Actions (for future use)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci"
