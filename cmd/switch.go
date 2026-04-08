@@ -132,7 +132,8 @@ func Switch() error {
 		return err
 	}
 
-	p := tea.NewProgram(m)
+	// Render TUI to stderr so only shell commands go to stdout (for eval)
+	p := tea.NewProgram(m, tea.WithOutput(os.Stderr))
 	finalModel, err := p.Run()
 	if err != nil {
 		return fmt.Errorf("failed to run TUI: %w", err)
