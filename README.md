@@ -28,7 +28,13 @@ A lightweight CLI tool for switching between Claude Code profiles with different
 3. Add shell integration to `~/.zshrc` or `~/.bashrc`:
    ```bash
    ccs() {
-     eval "$(command ccs switch)"
+     # If no arguments or "switch" argument, run interactive switcher
+     if [[ $# -eq 0 ]] || [[ "$1" == "switch" ]]; then
+       eval "$(command ccs switch)"
+     else
+       # Pass through other commands (current, version, help) directly
+       command ccs "$@"
+     fi
    }
    ```
 

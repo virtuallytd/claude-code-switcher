@@ -43,7 +43,7 @@ func printUsage() {
 	fmt.Println(`ccs - Claude Code Switcher
 
 Usage:
-  ccs switch     Switch Claude Code profile (interactive)
+  ccs [switch]   Switch Claude Code profile (interactive)
   ccs current    Show active profile
   ccs version    Show version
   ccs help       Show this help
@@ -51,8 +51,15 @@ Usage:
 Shell Integration:
   Add this function to your .zshrc or .bashrc:
     ccs() {
-      eval "$(command ccs switch)"
+      if [[ $# -eq 0 ]] || [[ "$1" == "switch" ]]; then
+        eval "$(command ccs switch)"
+      else
+        command ccs "$@"
+      fi
     }
 
-  Then use: ccs`)
+  Then use:
+    ccs           # Interactive switcher
+    ccs current   # Show active profile
+    ccs version   # Show version`)
 }

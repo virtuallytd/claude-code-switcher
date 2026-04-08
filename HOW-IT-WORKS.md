@@ -225,7 +225,13 @@ The Go binary runs in a subprocess and cannot modify the parent shell's environm
 ```bash
 # ~/.zshrc or ~/.bashrc
 ccs() {
-  eval "$(command ccs switch)"
+  # If no arguments or "switch" argument, run interactive switcher
+  if [[ $# -eq 0 ]] || [[ "$1" == "switch" ]]; then
+    eval "$(command ccs switch)"
+  else
+    # Pass through other commands (current, version, help) directly
+    command ccs "$@"
+  fi
 }
 ```
 
