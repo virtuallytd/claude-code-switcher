@@ -38,10 +38,11 @@ var (
 )
 
 type model struct {
-	profiles []profile.Profile
-	cursor   int
-	selected int
-	err      error
+	profiles       []profile.Profile
+	cursor         int
+	selected       int
+	currentProfile string
+	err            error
 }
 
 func initialModel() (model, error) {
@@ -50,10 +51,21 @@ func initialModel() (model, error) {
 		return model{}, err
 	}
 
+	currentProfile, _ := profile.GetCurrentProfile()
+
+	cursor := 0
+	for i, p := range profiles {
+		if p.Name == currentProfile {
+			cursor = i
+			break
+		}
+	}
+
 	return model{
-		profiles: profiles,
-		cursor:   0,
-		selected: -1,
+		profiles:       profiles,
+		cursor:         cursor,
+		selected:       -1,
+		currentProfile: currentProfile,
 	}, nil
 }
 
@@ -103,10 +115,14 @@ func (m model) View() string {
 			cursor = cursorStyle.Render("❯")
 		}
 
-		badge := standardBadge
+		// Use filled dot for active profile, empty dot for inactive
+		badge := standardBadge // ○
+		if p.Name == m.currentProfile {
+			badge = vertexBadge // ●
+		}
+
 		authType := "standard"
 		if p.IsVertex {
-			badge = vertexBadge
 			authType = "vertex"
 		}
 

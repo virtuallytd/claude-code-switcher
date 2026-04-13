@@ -21,6 +21,7 @@ Go-based Claude Code profile switcher (`ccs`) — enables quick switching betwee
 ccs (Go binary)
   ├─ Commands:
   │  ├─ switch    # Interactive TUI selector (bubbletea)
+  │  ├─ reload    # Re-apply current profile without TUI
   │  └─ current   # Show active profile
   │
   ├─ Outputs shell commands to stdout:
@@ -77,6 +78,11 @@ Profiles live in `~/.claude/profiles/<name>/`:
 - Re-applies the currently active profile without going through the TUI
 - Useful after editing a profile's `settings.json` (e.g. adding a new MCP server)
 - Same effect as re-selecting the current profile in `ccs switch`
+
+**`ccs save <profile>`**
+- Saves the current active session token to the keyring under `"Claude Code - <profile-name>"`
+- Required once per standard-auth profile: `claude login && ccs save <profile>`
+- Not needed for Vertex AI profiles (they use environment variables instead)
 
 **`ccs current`**
 - Shows active profile name and auth type

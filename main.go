@@ -7,7 +7,7 @@ import (
 	"github.com/adavis/ccs/cmd"
 )
 
-const version = "0.1.0"
+const version = "0.1.1"
 
 func main() {
 	command := "switch"
@@ -23,6 +23,15 @@ func main() {
 		}
 	case "reload":
 		if err := cmd.Reload(); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+	case "save":
+		if len(os.Args) < 3 {
+			fmt.Fprintf(os.Stderr, "Usage: ccs save <profile-name>\n")
+			os.Exit(1)
+		}
+		if err := cmd.Save(os.Args[2]); err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			os.Exit(1)
 		}
@@ -46,11 +55,12 @@ func printUsage() {
 	fmt.Println(`ccs - Claude Code Switcher
 
 Usage:
-  ccs [switch]   Switch Claude Code profile (interactive)
-  ccs reload     Re-apply current profile (e.g. after editing settings.json)
-  ccs current    Show active profile
-  ccs version    Show version
-  ccs help       Show this help
+  ccs [switch]        Switch Claude Code profile (interactive)
+  ccs reload          Re-apply current profile (e.g. after editing settings.json)
+  ccs save <profile>  Save current session token for a profile
+  ccs current         Show active profile
+  ccs version         Show version
+  ccs help            Show this help
 
 Shell Integration:
   Add this function to your .zshrc or .bashrc:

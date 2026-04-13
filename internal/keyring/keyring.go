@@ -2,6 +2,7 @@ package keyring
 
 import (
 	"fmt"
+	"os/user"
 	"runtime"
 
 	"github.com/99designs/keyring"
@@ -39,6 +40,16 @@ func getKeyring() (keyring.Keyring, error) {
 	return kr, nil
 }
 
+// activeTokenKey returns the keychain account name Claude Code uses for the active token.
+// Claude Code stores the token under the OS username, not the service name.
+func activeTokenKey() (string, error) {
+	u, err := user.Current()
+	if err != nil {
+		return "", fmt.Errorf("failed to get current user: %w", err)
+	}
+	return u.Username, nil
+}
+
 // GetActiveToken retrieves the active Claude Code session token
 func GetActiveToken() (string, error) {
 	kr, err := getKeyring()
@@ -46,7 +57,12 @@ func GetActiveToken() (string, error) {
 		return "", err
 	}
 
-	item, err := kr.Get(serviceName)
+	key, err := activeTokenKey()
+	if err != nil {
+		return "", err
+	}
+
+	item, err := kr.Get(key)
 	if err != nil {
 		if err == keyring.ErrKeyNotFound {
 			return "", fmt.Errorf("no active Claude session found. Run 'claude login' first")
@@ -64,8 +80,13 @@ func SetActiveToken(token string) error {
 		return err
 	}
 
+	key, err := activeTokenKey()
+	if err != nil {
+		return err
+	}
+
 	item := keyring.Item{
-		Key:  serviceName,
+		Key:  key,
 		Data: []byte(token),
 	}
 
