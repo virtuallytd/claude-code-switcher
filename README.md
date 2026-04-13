@@ -28,11 +28,11 @@ A lightweight CLI tool for switching between Claude Code profiles with different
 3. Add shell integration to `~/.zshrc` or `~/.bashrc`:
    ```bash
    ccs() {
-     # If no arguments or "switch" argument, run interactive switcher
-     if [[ $# -eq 0 ]] || [[ "$1" == "switch" ]]; then
-       eval "$(command ccs switch)"
+     # If no arguments, "switch", or "reload", run with eval
+     if [[ $# -eq 0 ]] || [[ "$1" == "switch" ]] || [[ "$1" == "reload" ]]; then
+       eval "$(command ccs "$@")"
      else
-       # Pass through other commands (current, version, help) directly
+       # Pass through other commands (save, current, version, help) directly
        command ccs "$@"
      fi
    }
@@ -64,6 +64,23 @@ This launches a TUI where you can:
 - Navigate with arrow keys or `j`/`k`
 - Select with `Enter`
 - Quit with `q`, `Esc`, or `Ctrl+C`
+
+### Reload Current Profile
+
+Re-apply the current profile without interactive selection (useful after editing `settings.json`):
+```bash
+ccs reload
+```
+
+### Save Session Token
+
+Save your current Claude Code session token for a profile (required once per standard auth profile):
+```bash
+claude login              # Login to Claude first
+ccs save personal         # Save token for "personal" profile
+```
+
+This is only needed for standard auth profiles. Vertex AI profiles use `gcloud` credentials.
 
 ### Show Current Profile
 
@@ -108,7 +125,11 @@ Add `settings.json`:
 }
 ```
 
-The session token is stored separately in your system keyring.
+Then save your session token:
+```bash
+claude login
+ccs save personal
+```
 
 ### Vertex AI Profile
 
@@ -143,8 +164,10 @@ Vertex AI authentication relies on `gcloud auth` being configured.
 
 ### Visual Indicators
 
-- `●` Orange dot = Vertex AI profile
-- `○` Blue dot = Standard auth profile
+- `●` Filled dot = Currently active profile
+- `○` Empty dot = Inactive profile
+- Orange text = Vertex AI profile
+- Blue text = Standard auth profile
 - `❯` Cursor on selected item
 
 ## Platform Support
@@ -190,7 +213,11 @@ Run `claude login` first, then switch profiles.
 
 ### "No saved token for profile"
 
-For standard auth profiles, you need to login and save the token manually (future feature: `ccs save <profile>`).
+For standard auth profiles, you need to save the token:
+```bash
+claude login
+ccs save <profile-name>
+```
 
 ### Profile not appearing in list
 
@@ -217,7 +244,9 @@ ccs/
 ├── main.go              # CLI entrypoint
 ├── cmd/
 │   ├── switch.go        # Interactive switcher (TUI)
-│   └── current.go       # Show active profile
+│   ├── current.go       # Show active profile
+│   ├── reload.go        # Reload current profile
+│   └── save.go          # Save session token
 └── internal/
     ├── profile/         # Profile discovery & loading
     ├── keyring/         # Keyring wrapper

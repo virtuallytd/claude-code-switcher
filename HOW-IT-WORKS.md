@@ -16,7 +16,7 @@ This document explains how `ccs` (Claude Code Switcher) integrates with Claude C
 **Claude Code reads from:**
 - `~/.claude/settings.json` - Main configuration file
 - `~/.claude/settings.local.json` - Overrides (takes precedence)
-- Keychain entry `"Claude Code"` - Session token (standard auth)
+- Keychain entry with OS username as key - Session token (standard auth)
 - Environment variables - `CLAUDE_CODE_USE_VERTEX`, etc. (Vertex AI auth)
 
 ### Profile Storage (Templates)
@@ -72,15 +72,15 @@ This ensures that if you switch from a Vertex AI profile to a standard profile, 
 ```go
 // internal/keyring/keyring.go
 token := GetProfileToken("personal")     // Get saved token from keyring
-SetActiveToken(token)                    // Copy to active "Claude Code" entry
+SetActiveToken(token)                    // Copy to active entry (keyed by OS username)
 ```
 
-**Keychain entries:**
-- `"Claude Code - personal"` → Profile's saved session token
-- `"Claude Code - work"` → Another profile's token
-- `"Claude Code"` → **Active token** (what Claude Code reads)
+**Keychain entries** (service name: `"Claude Code"`):
+- Key `"Claude Code - personal"` → Profile's saved session token
+- Key `"Claude Code - work"` → Another profile's token
+- Key `"<username>"` → **Active token** (what Claude Code reads)
 
-When you switch profiles, `ccs` copies the profile-specific token to the active entry.
+When you switch profiles, `ccs` copies the profile-specific token to the active entry (keyed by your OS username).
 
 #### For Vertex AI Profiles (has `env.zsh`)
 
@@ -201,10 +201,10 @@ export ANTHROPIC_VERTEX_PROJECT_ID=my-project
 }
 ```
 
-**Keychain:**
-- `"Claude Code"` → `token_xyz789` ✅ (copied from work profile - if standard auth)
-- `"Claude Code - personal"` → `token_abc123`
-- `"Claude Code - work"` → `token_xyz789`
+**Keychain** (service: `"Claude Code"`):
+- Key `"<username>"` → `token_xyz789` ✅ (copied from work profile - if standard auth)
+- Key `"Claude Code - personal"` → `token_abc123`
+- Key `"Claude Code - work"` → `token_xyz789`
 
 **Environment** (set in current shell):
 ```bash
@@ -225,11 +225,11 @@ The Go binary runs in a subprocess and cannot modify the parent shell's environm
 ```bash
 # ~/.zshrc or ~/.bashrc
 ccs() {
-  # If no arguments or "switch" argument, run interactive switcher
-  if [[ $# -eq 0 ]] || [[ "$1" == "switch" ]]; then
-    eval "$(command ccs switch)"
+  # If no arguments, "switch", or "reload", run with eval
+  if [[ $# -eq 0 ]] || [[ "$1" == "switch" ]] || [[ "$1" == "reload" ]]; then
+    eval "$(command ccs "$@")"
   else
-    # Pass through other commands (current, version, help) directly
+    # Pass through other commands (save, current, version, help) directly
     command ccs "$@"
   fi
 }
@@ -261,7 +261,7 @@ ccs() {
 | `~/.claude/settings.json` | ✅ Always | Every switch | `mcpServers` replaced |
 | `~/.claude/settings.local.json` | ❌ Never | - | Untouched |
 | `~/.claude/.current-profile` | ✅ Always | Every switch | Profile name saved |
-| Keychain `"Claude Code"` | ✅ Standard auth | Standard profile | Token copied from profile entry |
+| Keychain (active token) | ✅ Standard auth | Standard profile | Token copied from profile entry |
 | Environment vars | ✅ Vertex auth | Vertex profile | Exported via shell wrapper |
 | Profile configs | ❌ Never | - | Read-only templates |
 
@@ -288,20 +288,17 @@ If your profiles are symlinked from a dotfiles repo (like `mac-setup`):
 1. **First time setup:**
    ```bash
    claude login                          # Login to Claude
-   # Token is stored in keychain as "Claude Code"
-
-   # (Future feature: ccs save personal)
-   # For now, manually copy with security command
+   ccs save personal                     # Save token for profile
    ```
 
 2. **When switching:**
    ```go
    token := keyring.Get("Claude Code - personal")
-   keyring.Set("Claude Code", token)
+   keyring.Set(username, token)          // Uses OS username as key
    ```
 
 3. **Claude Code reads:**
-   - Looks for keychain entry `"Claude Code"`
+   - Looks for keychain entry with your OS username as the key
    - Uses that token for API requests
 
 ### Vertex AI Auth Flow
@@ -335,11 +332,11 @@ If your profiles are symlinked from a dotfiles repo (like `mac-setup`):
 
 ```bash
 ccs  # Select "personal"
-# → Keychain "Claude Code" = personal token
+# → Keychain (username key) = personal token
 # → settings.json mcpServers = personal servers
 
 ccs  # Select "work-standard"
-# → Keychain "Claude Code" = work-standard token
+# → Keychain (username key) = work-standard token
 # → settings.json mcpServers = work servers
 ```
 
@@ -351,7 +348,7 @@ echo $CLAUDE_CODE_USE_VERTEX  # → 1
 
 ccs  # Select "personal" (standard)
 # → Env vars cleared (unset)
-# → Keychain "Claude Code" = personal token
+# → Keychain (username key) = personal token
 # → settings.json mcpServers = personal servers
 
 echo $CLAUDE_CODE_USE_VERTEX  # → (empty)
@@ -408,11 +405,7 @@ unset CLAUDE_CODE_USE_VERTEX  # First thing ccs does
 **Solution:**
 ```bash
 claude login
-# Then manually save token (future: ccs save <profile>)
-security add-generic-password -U \
-  -s "Claude Code - personal" \
-  -a "$(whoami)" \
-  -w "$(security find-generic-password -s 'Claude Code' -w)"
+ccs save personal
 ```
 
 ### Profile switch doesn't affect Claude Code
@@ -422,7 +415,11 @@ security add-generic-password -U \
 **Solution:** Add to `~/.zshrc`:
 ```bash
 ccs() {
-  eval "$(command ccs switch)"
+  if [[ $# -eq 0 ]] || [[ "$1" == "switch" ]] || [[ "$1" == "reload" ]]; then
+    eval "$(command ccs "$@")"
+  else
+    command ccs "$@"
+  fi
 }
 ```
 
