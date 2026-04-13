@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	serviceName        = "Claude Code"
-	profileServiceFmt  = "Claude Code - %s"
+	serviceName       = "Claude Code"
+	profileServiceFmt = "Claude Code - %s"
 )
 
 // getKeyring returns a platform-specific keyring
