@@ -1,5 +1,11 @@
 # ccs - Claude Code Switcher
 
+[![Release](https://img.shields.io/github/v/release/virtuallytd/claude-code-switcher)](https://github.com/virtuallytd/claude-code-switcher/releases)
+[![Build](https://img.shields.io/github/actions/workflow/status/virtuallytd/claude-code-switcher/build.yml?branch=main)](https://github.com/virtuallytd/claude-code-switcher/actions)
+[![Go Report Card](https://goreportcard.com/badge/github.com/virtuallytd/claude-code-switcher)](https://goreportcard.com/report/github.com/virtuallytd/claude-code-switcher)
+[![License](https://img.shields.io/github/license/virtuallytd/claude-code-switcher)](LICENSE)
+[![Homebrew](https://img.shields.io/badge/homebrew-virtuallytd%2Ftap-orange)](https://github.com/virtuallytd/homebrew-tap)
+
 A lightweight CLI tool for switching between Claude Code profiles with different MCP server configurations and authentication methods.
 
 ## Features
