@@ -79,8 +79,10 @@ release:
 
     ### Homebrew (macOS/Linux)
     ```bash
-    brew install virtuallytd/tap/ccs
+    brew install virtuallytd/tap/claude-code-switcher
     ```
+
+    See [virtuallytd/homebrew-tap](https://github.com/virtuallytd/homebrew-tap) for shell integration setup.
 
     ### Manual Installation
     Download the binary for your platform below, extract it, and move to your PATH.

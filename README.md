@@ -16,10 +16,10 @@ A lightweight CLI tool for switching between Claude Code profiles with different
 ### Homebrew (macOS/Linux)
 
 ```bash
-brew install virtuallytd/tap/ccs
+brew install virtuallytd/tap/claude-code-switcher
 ```
 
-Then add shell integration to `~/.zshrc` or `~/.bashrc`:
+**Shell Integration** — Add to `~/.zshrc` or `~/.bashrc`:
 ```bash
 ccs() {
   # If no arguments, "switch", or "reload", run with eval
@@ -32,10 +32,17 @@ ccs() {
 }
 ```
 
-Reload your shell:
+**Reload your shell:**
 ```bash
 source ~/.zshrc
 ```
+
+**Verify:**
+```bash
+ccs version
+```
+
+> For more Homebrew options and tap usage, see [virtuallytd/homebrew-tap](https://github.com/virtuallytd/homebrew-tap).
 
 ### Manual Install
 
