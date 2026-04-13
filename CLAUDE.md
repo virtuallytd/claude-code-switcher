@@ -71,7 +71,7 @@ Profiles live in `~/.claude/profiles/<name>/`:
 - Clears Vertex AI environment variables on every switch (prevents leakage)
 - For Vertex AI profiles: sources `env.zsh` and outputs export commands
 - For standard profiles: restores session token from keyring to active `"Claude Code"` entry
-- Merges `mcpServers` from profile's `settings.json` into active `~/.claude/settings.json`
+- Merges `mcpServers` from profile's `settings.json` into active `~/.claude.json`
 - Saves current profile to `~/.claude/.current-profile`
 
 **`ccs reload`**
@@ -100,14 +100,15 @@ ccs() {
 
 ## Build & Install
 
-**Build binary**:
+**Local development build**:
 ```bash
-go build -o ccs
+make build        # Builds binary with version "dev"
+make install      # Installs to /usr/local/bin/
 ```
 
-**Install to PATH**:
+**Test GoReleaser locally** (without git tags):
 ```bash
-sudo mv ccs /usr/local/bin/
+make snapshot     # Builds multi-platform binaries in dist/
 ```
 
 **Add shell integration** to `~/.zshrc` or `~/.bashrc`:
@@ -138,7 +139,25 @@ source ~/.zshrc
 - TUI model implements bubbletea's `tea.Model` interface (Init, Update, View)
 - Styles defined at package level using lipgloss
 
-**No automated tests exist** — the codebase relies on manual testing.
+**Testing**:
+```bash
+make test         # Run tests
+go test -v -race ./...
+```
+
+**Release process** (GoReleaser):
+1. Commit all changes
+2. Create and push git tag: `git tag v0.2.0 && git push origin v0.2.0`
+3. GitHub Actions automatically:
+   - Runs tests
+   - Builds multi-platform binaries (macOS/Linux, ARM64/AMD64)
+   - Creates GitHub release with changelog
+   - Publishes to Homebrew tap (requires `HOMEBREW_TAP_GITHUB_TOKEN` secret)
+
+**Versioning**:
+- Version is injected at build time via ldflags from git tags
+- `main.go` has `var version = "dev"` as fallback
+- Local builds show "dev", releases show actual version (e.g., "v0.2.0")
 
 **Testing profile discovery**:
 ```bash

@@ -7,7 +7,8 @@ import (
 	"github.com/adavis/ccs/cmd"
 )
 
-const version = "0.1.1"
+// version is set by GoReleaser at build time via ldflags
+var version = "dev"
 
 func main() {
 	command := "switch"

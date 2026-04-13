@@ -3,18 +3,13 @@ name: Build
 on:
   push:
     branches: [main]
-    tags:
-      - 'v*'
   pull_request:
     branches: [main]
 
-permissions:
-  contents: write
-
 jobs:
   build:
-    name: Build
-    runs-on: macos-latest
+    name: Build and Test
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
@@ -29,64 +24,5 @@ jobs:
       - name: Run tests
         run: go test -v -race ./...
 
-      - name: Build for macOS (ARM64)
-        run: |
-          GOOS=darwin GOARCH=arm64 go build -o ccs-darwin-arm64 -ldflags="-s -w" .
-          chmod +x ccs-darwin-arm64
-
-      - name: Build for macOS (AMD64)
-        run: |
-          GOOS=darwin GOARCH=amd64 go build -o ccs-darwin-amd64 -ldflags="-s -w" .
-          chmod +x ccs-darwin-amd64
-
-      - name: Build for Linux (ARM64)
-        run: |
-          GOOS=linux GOARCH=arm64 go build -o ccs-linux-arm64 -ldflags="-s -w" .
-          chmod +x ccs-linux-arm64
-
-      - name: Build for Linux (AMD64)
-        run: |
-          GOOS=linux GOARCH=amd64 go build -o ccs-linux-amd64 -ldflags="-s -w" .
-          chmod +x ccs-linux-amd64
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: binaries
-          path: |
-            ccs-darwin-arm64
-            ccs-darwin-amd64
-            ccs-linux-arm64
-            ccs-linux-amd64
-
-  release:
-    name: Create Release
-    needs: build
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: binaries
-
-      - name: Create checksums
-        run: |
-          sha256sum ccs-* > checksums.txt
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            ccs-darwin-arm64
-            ccs-darwin-amd64
-            ccs-linux-arm64
-            ccs-linux-amd64
-            checksums.txt
-          generate_release_notes: true
-          draft: false
-          prerelease: false
+      - name: Build
+        run: go build -v .

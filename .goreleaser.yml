@@ -1,0 +1,86 @@
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+    - go test ./...
+
+builds:
+  - id: ccs
+    binary: ccs
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+
+archives:
+  - id: ccs
+    format_overrides:
+      - goos: windows
+        format: zip
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - LICENSE
+      - README.md
+
+checksum:
+  name_template: 'checksums.txt'
+
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^chore:'
+      - Merge pull request
+      - Merge branch
+  groups:
+    - title: Features
+      regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
+      order: 0
+    - title: Bug Fixes
+      regexp: '^.*?fix(\([[:word:]]+\))??!?:.+$'
+      order: 1
+    - title: Others
+      order: 999
+
+brews:
+  - repository:
+      owner: virtuallytd
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    directory: Formula
+    homepage: https://github.com/virtuallytd/claude-code-switcher
+    description: "CLI tool for switching between Claude Code profiles"
+    license: MIT
+    install: |
+      bin.install "ccs"
+    test: |
+      system "#{bin}/ccs", "version"
+
+release:
+  github:
+    owner: virtuallytd
+    name: claude-code-switcher
+  draft: false
+  prerelease: auto
+  mode: replace
+  header: |
+    ## Installation
+
+    ### Homebrew (macOS/Linux)
+    ```bash
+    brew install virtuallytd/tap/ccs
+    ```
+
+    ### Manual Installation
+    Download the binary for your platform below, extract it, and move to your PATH.

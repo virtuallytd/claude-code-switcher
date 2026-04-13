@@ -13,40 +13,46 @@ A lightweight CLI tool for switching between Claude Code profiles with different
 
 ## Installation
 
+### Homebrew (macOS/Linux)
+
+```bash
+brew install virtuallytd/tap/ccs
+```
+
+Then add shell integration to `~/.zshrc` or `~/.bashrc`:
+```bash
+ccs() {
+  # If no arguments, "switch", or "reload", run with eval
+  if [[ $# -eq 0 ]] || [[ "$1" == "switch" ]] || [[ "$1" == "reload" ]]; then
+    eval "$(command ccs "$@")"
+  else
+    # Pass through other commands (save, current, version, help) directly
+    command ccs "$@"
+  fi
+}
+```
+
+Reload your shell:
+```bash
+source ~/.zshrc
+```
+
 ### Manual Install
 
-1. Build the binary:
+1. Download the latest binary from [releases](https://github.com/virtuallytd/claude-code-switcher/releases)
+2. Extract and move to your PATH:
    ```bash
-   go build -o ccs
-   ```
-
-2. Move to your PATH:
-   ```bash
+   tar -xzf ccs_*.tar.gz
    sudo mv ccs /usr/local/bin/
    ```
-
-3. Add shell integration to `~/.zshrc` or `~/.bashrc`:
-   ```bash
-   ccs() {
-     # If no arguments, "switch", or "reload", run with eval
-     if [[ $# -eq 0 ]] || [[ "$1" == "switch" ]] || [[ "$1" == "reload" ]]; then
-       eval "$(command ccs "$@")"
-     else
-       # Pass through other commands (save, current, version, help) directly
-       command ccs "$@"
-     fi
-   }
-   ```
-
-4. Reload your shell:
-   ```bash
-   source ~/.zshrc
-   ```
+3. Add the shell function above to your shell config
 
 ### From Source
 
 ```bash
-go install github.com/virtuallytd/claude-code-switcher@latest
+git clone https://github.com/virtuallytd/claude-code-switcher
+cd claude-code-switcher
+make install
 ```
 
 Then add the shell function above to your shell config.
