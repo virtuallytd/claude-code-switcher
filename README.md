@@ -46,7 +46,7 @@ A lightweight CLI tool for switching between Claude Code profiles with different
 ### From Source
 
 ```bash
-go install github.com/adavis/ccs@latest
+go install github.com/virtuallytd/claude-code-switcher@latest
 ```
 
 Then add the shell function above to your shell config.
