@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/adavis/ccs/internal/keyring"
+	"github.com/virtuallytd/claude-code-switcher/internal/keyring"
 )
 
 // Save saves the current active session token as a named profile token

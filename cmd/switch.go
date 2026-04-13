@@ -8,9 +8,9 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/adavis/ccs/internal/config"
-	"github.com/adavis/ccs/internal/keyring"
-	"github.com/adavis/ccs/internal/profile"
+	"github.com/virtuallytd/claude-code-switcher/internal/config"
+	"github.com/virtuallytd/claude-code-switcher/internal/keyring"
+	"github.com/virtuallytd/claude-code-switcher/internal/profile"
 )
 
 var (

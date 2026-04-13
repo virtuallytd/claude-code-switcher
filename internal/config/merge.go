@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/adavis/ccs/internal/profile"
+	"github.com/virtuallytd/claude-code-switcher/internal/profile"
 )
 
 // MergeSettings merges MCP servers from profile settings into ~/.claude.json

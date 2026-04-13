@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/adavis/ccs/internal/profile"
+	"github.com/virtuallytd/claude-code-switcher/internal/profile"
 )
 
 // Reload re-applies the currently active profile's settings and auth

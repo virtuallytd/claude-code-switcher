@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/adavis/ccs/cmd"
+	"github.com/virtuallytd/claude-code-switcher/cmd"
 )
 
 // version is set by GoReleaser at build time via ldflags
