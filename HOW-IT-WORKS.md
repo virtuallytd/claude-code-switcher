@@ -1,5 +1,7 @@
 # How CCS Works with Claude Code
 
+> 📚 **Deep Dive Document** — This is a detailed technical explanation of how `ccs` integrates with Claude Code's configuration system. For basic usage, see [README.md](README.md).
+
 This document explains how `ccs` (Claude Code Switcher) integrates with Claude Code's configuration system.
 
 ## Claude Code Configuration Files

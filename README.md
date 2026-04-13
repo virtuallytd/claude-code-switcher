@@ -70,6 +70,20 @@ make install
 
 Then add the shell function above to your shell config.
 
+## How It Works
+
+`ccs` manages Claude Code profiles by:
+
+1. **Storing profiles** in `~/.claude/profiles/<name>/` with their own `settings.json`
+2. **Switching** merges the selected profile's MCP server config into `~/.claude.json`
+3. **Authentication** handles two modes:
+   - **Standard**: Copies session tokens between keyring entries (macOS Keychain / Linux Secret Service)
+   - **Vertex AI**: Exports environment variables via shell function
+
+The shell wrapper (`eval "$(ccs switch)"`) is required for environment variable export in Vertex AI profiles.
+
+> 📖 **Want more details?** See [HOW-IT-WORKS.md](HOW-IT-WORKS.md) for a deep dive into the implementation, architecture, and Claude Code integration.
+
 ## Usage
 
 ### Switch Profiles
