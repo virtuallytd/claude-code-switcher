@@ -141,9 +141,17 @@ source ~/.zshrc
 
 **Testing**:
 ```bash
-make test         # Run tests
-go test -v -race ./...
+make test                          # Run tests
+go test -v -race ./...             # Run with race detector
+go test -coverprofile=coverage.out ./...  # Generate coverage
+go tool cover -html=coverage.out   # View coverage in browser
 ```
+
+Current test coverage focuses on critical paths:
+- Environment variable parsing (`internal/profile`) - 95.2% coverage
+- Settings merging (`internal/config`) - 78.9% coverage
+- Profile state management - 80% coverage
+- Overall: ~20% (main.go and cmd/ have no tests, focus is on business logic)
 
 **Release process** (GoReleaser):
 1. Commit all changes

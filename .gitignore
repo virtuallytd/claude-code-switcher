@@ -9,6 +9,10 @@ ccs
 # GoReleaser
 dist/
 
+# Test coverage
+coverage.out
+*.coverprofile
+
 # Test binary
 *.test
 

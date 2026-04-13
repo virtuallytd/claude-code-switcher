@@ -231,10 +231,14 @@ Ensure the profile directory has a valid `settings.json` file.
 
 ## Development
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
+
 ### Build
 
 ```bash
-go build -o ccs
+make build              # Build binary
+make test               # Run tests
+make snapshot           # Test GoReleaser build locally
 ```
 
 ### Dependencies
@@ -258,6 +262,10 @@ ccs/
     ├── keyring/         # Keyring wrapper
     └── config/          # Settings.json merging
 ```
+
+## Security
+
+See [SECURITY.md](SECURITY.md) for security policy and reporting vulnerabilities
 
 ## License
 
