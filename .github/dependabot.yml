@@ -24,14 +24,21 @@ updates:
         update-types:
           - "major"
 
-  # Enable version updates for GitHub Actions (for future use)
+  # Enable version updates for GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
       day: "monday"
+    open-pull-requests-limit: 5
     labels:
       - "dependencies"
       - "github-actions"
     commit-message:
       prefix: "ci"
+      include: "scope"
+    groups:
+      # Group all GitHub Actions updates together
+      actions:
+        patterns:
+          - "*"
