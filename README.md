@@ -1,7 +1,8 @@
 # ccs - Claude Code Switcher
 
 [![Release](https://img.shields.io/github/v/release/virtuallytd/claude-code-switcher)](https://github.com/virtuallytd/claude-code-switcher/releases)
-[![Build](https://img.shields.io/github/actions/workflow/status/virtuallytd/claude-code-switcher/build.yml?branch=main)](https://github.com/virtuallytd/claude-code-switcher/actions)
+[![Build](https://img.shields.io/github/actions/workflow/status/virtuallytd/claude-code-switcher/build.yml?branch=main&label=build)](https://github.com/virtuallytd/claude-code-switcher/actions/workflows/build.yml)
+[![Test](https://img.shields.io/github/actions/workflow/status/virtuallytd/claude-code-switcher/test.yml?branch=main&label=test)](https://github.com/virtuallytd/claude-code-switcher/actions/workflows/test.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/virtuallytd/claude-code-switcher)](https://goreportcard.com/report/github.com/virtuallytd/claude-code-switcher)
 [![License](https://img.shields.io/github/license/virtuallytd/claude-code-switcher)](LICENSE)
 [![Homebrew](https://img.shields.io/badge/homebrew-virtuallytd%2Ftap-orange)](https://github.com/virtuallytd/homebrew-tap)
