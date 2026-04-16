@@ -54,6 +54,16 @@ func GetActiveSettingsPath() string {
 	return filepath.Join(home, ".claude", "settings.json")
 }
 
+const firstRunMessage = `Welcome to ccs! To get started, create a profile directory:
+
+  mkdir -p ~/.claude/profiles/<profile-name>
+
+Then add a settings.json with your MCP server configuration:
+
+  ~/.claude/profiles/<profile-name>/settings.json
+
+See https://github.com/virtuallytd/claude-code-switcher#profiles for details.`
+
 // Discover finds all available profiles
 func Discover() ([]Profile, error) {
 	profilesDir := GetProfilesDir()
@@ -61,7 +71,10 @@ func Discover() ([]Profile, error) {
 	entries, err := os.ReadDir(profilesDir)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("profiles directory not found: %s", profilesDir)
+			if err := os.MkdirAll(profilesDir, 0755); err != nil {
+				return nil, fmt.Errorf("failed to create profiles directory: %w", err)
+			}
+			return nil, fmt.Errorf("%s", firstRunMessage)
 		}
 		return nil, fmt.Errorf("failed to read profiles directory: %w", err)
 	}
@@ -96,7 +109,7 @@ func Discover() ([]Profile, error) {
 	}
 
 	if len(profiles) == 0 {
-		return nil, fmt.Errorf("no profiles found in %s", profilesDir)
+		return nil, fmt.Errorf("%s", firstRunMessage)
 	}
 
 	return profiles, nil
