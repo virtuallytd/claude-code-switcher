@@ -6,13 +6,25 @@ before:
     - go test ./...
 
 builds:
-  - id: ccs
+  - id: ccs-darwin
+    binary: ccs
+    env:
+      - CGO_ENABLED=1
+    goos:
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+
+  - id: ccs-linux
     binary: ccs
     env:
       - CGO_ENABLED=0
     goos:
       - linux
-      - darwin
     goarch:
       - amd64
       - arm64
