@@ -254,16 +254,13 @@ func runCmd() *cobra.Command {
 				"run", "--rm", "-it",
 				"--name", containerName,
 				"--env-file", envFile,
-				"-v", filepath.Join(profileDir, "settings.json") + ":/home/claude/.claude/settings.json:ro",
-				"-v", filepath.Join(profileDir, "settings.local.json") + ":/home/claude/.claude/settings.local.json:ro",
+				"-e", "CCS_WORKDIR=" + projectPath,
+				"-v", profileDir + ":/ccs-profile:ro",
 				"-v", projectPath + ":" + projectPath,
 				"-w", projectPath,
 			}
 
 			mcpFile := filepath.Join(profileDir, "mcp.json")
-			if _, err := os.Stat(mcpFile); err == nil {
-				podmanArgs = append(podmanArgs, "-v", mcpFile+":"+projectPath+"/.mcp.json:ro")
-			}
 
 			if envFileContains(envFile, "CLAUDE_CODE_USE_VERTEX") {
 				home, _ := os.UserHomeDir()

@@ -21,7 +21,9 @@ ARG USER_GID=20
 RUN groupadd -g ${USER_GID} claude 2>/dev/null || true \
   && useradd -m -u ${USER_UID} -g ${USER_GID} -s /bin/bash claude
 
+COPY --chmod=755 entrypoint.sh /usr/local/bin/entrypoint.sh
+
 USER claude
 RUN mkdir -p /home/claude/.claude
 
-ENTRYPOINT ["claude"]
+ENTRYPOINT ["entrypoint.sh"]
