@@ -1,0 +1,48 @@
+version: 2
+
+project_name: claude-code-switcher
+
+builds:
+  - binary: ccs
+    main: .
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X main.version={{ .Version }}
+
+archives:
+  - format: tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - Containerfile
+      - entrypoint.sh
+      - README.md
+      - LICENSE
+
+brews:
+  - repository:
+      owner: virtuallytd
+      name: homebrew-tap
+    name: claude-code-switcher
+    homepage: https://github.com/virtuallytd/claude-code-switcher
+    description: CLI tool for running Claude Code with isolated Podman profiles
+    license: MIT
+    install: |
+      bin.install "ccs"
+      prefix.install "Containerfile"
+      prefix.install "entrypoint.sh"
+    test: |
+      system "#{bin}/ccs", "--version"
+    dependencies:
+      - name: podman
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"

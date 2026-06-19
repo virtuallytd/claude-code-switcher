@@ -1,36 +1,120 @@
-# ccs — Claude Code Switcher
+# Claude Code Switcher
 
-A profile switcher for running Claude Code in isolated Podman containers. Two profiles — `work` (Google Vertex AI auth) and `personal` (Anthropic API key) — each with separate MCP servers, settings, and credentials.
+A CLI tool for running [Claude Code](https://claude.ai/code) in isolated Podman containers, each with its own authentication, MCP servers, and settings.
 
-## Setup
+## Features
+
+- **Profile Isolation** — each profile runs in its own container with separate auth, MCP servers, and settings
+- **Dual Auth Support** — Google Vertex AI (ADC) and direct Anthropic API key profiles side by side
+- **MCP Server Management** — per-profile MCP server configurations, automatically detected and loaded
+- **Simultaneous Sessions** — run multiple profiles (or the same profile) in different terminals at the same time
+- **Interactive Setup** — `ccs init` walks you through creating a new profile
+- **Container-Based** — Podman containers ensure clean separation with no credential leakage between profiles
+
+## Installation
+
+### Homebrew
 
 ```bash
-make build                 # Build the CLI (version from git tag)
-./ccs build                # Build the Podman container image
+brew install virtuallytd/tap/claude-code-switcher
+```
+
+### From Source
+
+```bash
+git clone https://github.com/virtuallytd/claude-code-switcher
+cd claude-code-switcher
+make build
+```
+
+### Prerequisites
+
+- [Podman](https://podman.io/) — `brew install podman`
+- A running Podman machine — `podman machine init && podman machine start`
+
+## Quick Start
+
+```bash
+# Build the container image (one-time)
+ccs build
+
+# Create a profile
+ccs init work
+# Auth type (api/vertex): vertex
+# Vertex project ID: my-gcp-project
+# Vertex region [global]: global
+# Model [claude-sonnet-4-6]: claude-opus-4-6
+
+# Launch Claude Code
+ccs work ~/Projects/my-repo
 ```
 
 ## Usage
 
 ```bash
-ccs work ~/Projects/work/my-repo       # Launch work profile
-ccs personal ~/Projects/personal/app   # Launch personal profile
-ccs work ~/repo -- --resume            # Pass args to claude
-ccs build                              # Build/rebuild container image
-ccs stop                               # Stop all containers
-ccs stop work                          # Stop work containers only
-ccs status                             # Show running containers
-ccs profiles                           # List available profiles
+ccs <profile> [path] [-- claude-args...]    # Launch Claude Code with a profile
+ccs init <name>                              # Create a new profile interactively
+ccs build                                    # Build/rebuild the container image
+ccs profiles                                 # List available profiles
+ccs status                                   # Show running containers
+ccs stop [profile]                           # Stop container(s)
+ccs --version                                # Show version
 ```
 
-## Architecture
+### Running Multiple Sessions
 
-- **`main.go`** — Go CLI (cobra) that shells out to `podman` to run Claude Code in isolated containers.
-- **`Containerfile`** — Single image with Node 22, Claude Code (npm), and gcloud CLI. Runs as non-root user matching host UID/GID.
-- **`~/.ccs_profiles/<name>/`** — Per-profile config stored outside the repo: `.env` (auth credentials), `settings.json`, `settings.local.json` (MCP servers + permissions). Profiles with `CLAUDE_CODE_USE_VERTEX=1` in `.env` automatically get `~/.config/gcloud` mounted.
+Open separate terminals and launch different profiles — or the same profile on different directories:
 
-Containers are named `cc-<profile>-<path-hash>` so multiple instances can run simultaneously in different terminals.
+```bash
+# Terminal 1
+ccs work ~/Projects/work/api-service
 
-## Adding a new profile
+# Terminal 2
+ccs personal ~/Projects/personal/side-project
 
-1. Create `~/.ccs_profiles/<name>/` with `.env`, `settings.json`, and `settings.local.json`
-2. Run `ccs <name> /path/to/project`
+# Terminal 3
+ccs work ~/Projects/work/frontend
+```
+
+### Adding MCP Servers
+
+Create a `mcp.json` file in the profile directory:
+
+```bash
+cat > ~/.ccs_profiles/work/mcp.json << 'EOF'
+{
+  "mcpServers": {
+    "my-server": {
+      "type": "http",
+      "url": "http://localhost:3001/mcp"
+    }
+  }
+}
+EOF
+```
+
+MCP servers running on localhost are automatically accessible from the container via host networking.
+
+## How It Works
+
+Each profile is a directory in `~/.ccs_profiles/` containing:
+
+| File | Purpose |
+|------|---------|
+| `.env` | Auth credentials (API key or Vertex AI config) |
+| `settings.json` | Claude Code settings (model, theme) |
+| `settings.local.json` | Permissions and tool allowlists |
+| `mcp.json` | MCP server definitions (optional) |
+
+When you run `ccs <profile> <path>`, the tool:
+
+1. Starts a Podman container from a shared image (Node 22 + Claude Code + gcloud CLI)
+2. Copies profile settings into the container
+3. Bind-mounts your project directory
+4. Launches Claude Code with the profile's auth and MCP config
+
+Containers are ephemeral (`--rm`) and isolated — nothing persists between sessions except your project files.
+
+## License
+
+[MIT](LICENSE)

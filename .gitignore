@@ -1,2 +1,4 @@
 .env
 ccs
+dist/
+*.tar.gz
