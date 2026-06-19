@@ -69,6 +69,8 @@ func fileContainsString(path, substr string) bool {
 	return strings.Contains(string(data), substr)
 }
 
+var version = "dev"
+
 func pathHash(p string) string {
 	h := sha256.Sum256([]byte(p))
 	return fmt.Sprintf("%x", h[:4])
@@ -76,8 +78,9 @@ func pathHash(p string) string {
 
 func main() {
 	root := &cobra.Command{
-		Use:   "ccs <profile> [path] [-- claude-args...]",
-		Short: "Claude Code Switcher — run Claude Code with isolated Podman profiles",
+		Use:     "ccs <profile> [path] [-- claude-args...]",
+		Short:   "Claude Code Switcher — run Claude Code with isolated Podman profiles",
+		Version: version,
 		Example: `  ccs work ~/Projects/work/my-repo
   ccs personal ~/Projects/personal/my-app
   ccs work ~/Projects/work/my-repo -- --resume
