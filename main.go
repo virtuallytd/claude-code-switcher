@@ -2,7 +2,10 @@ package main
 
 import (
 	"bufio"
+	"crypto/rand"
 	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -76,6 +79,12 @@ func pathHash(p string) string {
 	return fmt.Sprintf("%x", h[:4])
 }
 
+func randSuffix() string {
+	b := make([]byte, 3)
+	rand.Read(b)
+	return hex.EncodeToString(b)
+}
+
 func main() {
 	root := &cobra.Command{
 		Use:     "ccs <profile> [path] [-- claude-args...]",
@@ -92,10 +101,11 @@ func main() {
 	root.AddCommand(stopCmd())
 	root.AddCommand(statusCmd())
 	root.AddCommand(profilesCmd())
+	root.AddCommand(initCmd())
 	root.AddCommand(runCmd())
 
 	// Route unknown subcommands to "run" so `ccs work` works like `ccs run work`
-	knownCmds := map[string]bool{"build": true, "stop": true, "status": true, "profiles": true, "run": true, "help": true, "completion": true}
+	knownCmds := map[string]bool{"build": true, "stop": true, "status": true, "profiles": true, "init": true, "run": true, "help": true, "completion": true}
 	if len(os.Args) > 1 && !knownCmds[os.Args[1]] && !strings.HasPrefix(os.Args[1], "-") {
 		os.Args = append([]string{os.Args[0], "run"}, os.Args[1:]...)
 	}
@@ -188,6 +198,80 @@ func profilesCmd() *cobra.Command {
 	}
 }
 
+func initCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "init <name>",
+		Short: "Create a new profile",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := args[0]
+			dir := filepath.Join(profilesDir(), name)
+
+			if _, err := os.Stat(dir); err == nil {
+				return fmt.Errorf("profile '%s' already exists at %s", name, dir)
+			}
+
+			if err := os.MkdirAll(dir, 0755); err != nil {
+				return fmt.Errorf("failed to create %s: %w", dir, err)
+			}
+
+			reader := bufio.NewReader(os.Stdin)
+
+			fmt.Print("Auth type (api/vertex): ")
+			authType, _ := reader.ReadString('\n')
+			authType = strings.TrimSpace(authType)
+
+			var envContent string
+			switch authType {
+			case "vertex":
+				fmt.Print("Vertex project ID: ")
+				projectID, _ := reader.ReadString('\n')
+				projectID = strings.TrimSpace(projectID)
+
+				fmt.Print("Vertex region [global]: ")
+				region, _ := reader.ReadString('\n')
+				region = strings.TrimSpace(region)
+				if region == "" {
+					region = "global"
+				}
+
+				envContent = fmt.Sprintf("CLAUDE_CODE_USE_VERTEX=1\nCLOUD_ML_REGION=%s\nANTHROPIC_VERTEX_PROJECT_ID=%s\n", region, projectID)
+			default:
+				fmt.Print("Anthropic API key: ")
+				apiKey, _ := reader.ReadString('\n')
+				apiKey = strings.TrimSpace(apiKey)
+				envContent = fmt.Sprintf("ANTHROPIC_API_KEY=%s\n", apiKey)
+			}
+
+			os.WriteFile(filepath.Join(dir, ".env"), []byte(envContent), 0600)
+
+			fmt.Print("Model [claude-sonnet-4-6]: ")
+			model, _ := reader.ReadString('\n')
+			model = strings.TrimSpace(model)
+			if model == "" {
+				model = "claude-sonnet-4-6"
+			}
+
+			settings := map[string]string{"model": model, "theme": "auto"}
+			settingsJSON, _ := json.MarshalIndent(settings, "", "  ")
+			os.WriteFile(filepath.Join(dir, "settings.json"), append(settingsJSON, '\n'), 0644)
+
+			permissions := map[string]any{
+				"permissions": map[string]any{
+					"allow": []string{"WebSearch"},
+				},
+			}
+			permJSON, _ := json.MarshalIndent(permissions, "", "  ")
+			os.WriteFile(filepath.Join(dir, "settings.local.json"), append(permJSON, '\n'), 0644)
+
+			fmt.Printf("\nProfile '%s' created at %s\n", name, dir)
+			fmt.Println("To add MCP servers, create mcp.json in that directory.")
+			fmt.Printf("Launch with: ccs %s /path/to/project\n", name)
+			return nil
+		},
+	}
+}
+
 func runCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:                "run <profile> [path] [-- claude-args...]",
@@ -246,9 +330,7 @@ func runCmd() *cobra.Command {
 				projectPath = abs
 			}
 
-			containerName := fmt.Sprintf("%s-%s-%s", containerPrefix, profile, pathHash(projectPath))
-
-			_ = exec.Command("podman", "rm", "-f", containerName).Run()
+			containerName := fmt.Sprintf("%s-%s-%s-%s", containerPrefix, profile, pathHash(projectPath), randSuffix())
 
 			emptyMCP := filepath.Join(profileDir, ".empty-mcp.json")
 			if _, err := os.Stat(emptyMCP); os.IsNotExist(err) {
