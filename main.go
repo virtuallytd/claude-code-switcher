@@ -61,6 +61,14 @@ func envFileContains(path, key string) bool {
 	return false
 }
 
+func fileContainsString(path, substr string) bool {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return false
+	}
+	return strings.Contains(string(data), substr)
+}
+
 func pathHash(p string) string {
 	h := sha256.Sum256([]byte(p))
 	return fmt.Sprintf("%x", h[:4])
@@ -249,12 +257,23 @@ func runCmd() *cobra.Command {
 				"-w", projectPath,
 			}
 
+			mcpFile := filepath.Join(profileDir, "mcp.json")
+			if _, err := os.Stat(mcpFile); err == nil {
+				podmanArgs = append(podmanArgs, "-v", mcpFile+":"+projectPath+"/.mcp.json:ro")
+			}
+
 			if envFileContains(envFile, "CLAUDE_CODE_USE_VERTEX") {
 				home, _ := os.UserHomeDir()
 				gcloudDir := filepath.Join(home, ".config", "gcloud")
 				if _, err := os.Stat(gcloudDir); err == nil {
 					podmanArgs = append(podmanArgs, "-v", gcloudDir+":/home/claude/.config/gcloud:ro")
 				}
+			}
+
+			needsHostNet := fileContainsString(mcpFile, "localhost") ||
+				fileContainsString(filepath.Join(profileDir, "settings.local.json"), "localhost")
+			if needsHostNet {
+				podmanArgs = append(podmanArgs, "--network", "host")
 			}
 
 			podmanArgs = append(podmanArgs, imageName)
