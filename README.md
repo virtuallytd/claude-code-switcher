@@ -5,7 +5,7 @@ A profile switcher for running Claude Code in isolated Podman containers. Two pr
 ## Setup
 
 ```bash
-go build -o ccs .          # Build the CLI
+make build                 # Build the CLI (version from git tag)
 ./ccs build                # Build the Podman container image
 ```
 
