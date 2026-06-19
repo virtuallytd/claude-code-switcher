@@ -250,17 +250,33 @@ func runCmd() *cobra.Command {
 
 			_ = exec.Command("podman", "rm", "-f", containerName).Run()
 
+			emptyMCP := filepath.Join(profileDir, ".empty-mcp.json")
+			if _, err := os.Stat(emptyMCP); os.IsNotExist(err) {
+				os.WriteFile(emptyMCP, []byte("{\"mcpServers\":{}}\n"), 0644)
+			}
+
 			podmanArgs := []string{
 				"run", "--rm", "-it",
 				"--name", containerName,
 				"--env-file", envFile,
-				"-e", "CCS_WORKDIR=" + projectPath,
 				"-v", profileDir + ":/ccs-profile:ro",
 				"-v", projectPath + ":" + projectPath,
 				"-w", projectPath,
 			}
 
 			mcpFile := filepath.Join(profileDir, "mcp.json")
+			if _, err := os.Stat(mcpFile); err == nil {
+				podmanArgs = append(podmanArgs, "-v", mcpFile+":"+projectPath+"/.mcp.json:ro")
+				// Shadow any .mcp.json in parent directories so Claude Code doesn't find broken ones
+				dir := filepath.Dir(projectPath)
+				for dir != "/" && dir != "." {
+					parentMCP := filepath.Join(dir, ".mcp.json")
+					if _, err := os.Stat(parentMCP); err == nil {
+						podmanArgs = append(podmanArgs, "-v", emptyMCP+":"+parentMCP+":ro")
+					}
+					dir = filepath.Dir(dir)
+				}
+			}
 
 			if envFileContains(envFile, "CLAUDE_CODE_USE_VERTEX") {
 				home, _ := os.UserHomeDir()
