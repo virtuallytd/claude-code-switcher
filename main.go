@@ -257,6 +257,7 @@ func runCmd() *cobra.Command {
 
 			podmanArgs := []string{
 				"run", "--rm", "-it",
+				"--userns=keep-id",
 				"--name", containerName,
 				"--env-file", envFile,
 				"-v", profileDir + ":/ccs-profile:ro",
@@ -266,7 +267,6 @@ func runCmd() *cobra.Command {
 
 			mcpFile := filepath.Join(profileDir, "mcp.json")
 			if _, err := os.Stat(mcpFile); err == nil {
-				podmanArgs = append(podmanArgs, "-v", mcpFile+":"+projectPath+"/.mcp.json:ro")
 				// Shadow any .mcp.json in parent directories so Claude Code doesn't find broken ones
 				dir := filepath.Dir(projectPath)
 				for dir != "/" && dir != "." {
