@@ -15,15 +15,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN npm install -g @anthropic-ai/claude-code
 
-ARG USER_UID=501
-ARG USER_GID=20
-
-RUN groupadd -g ${USER_GID} claude 2>/dev/null || true \
-  && useradd -m -u ${USER_UID} -g ${USER_GID} -s /bin/bash claude
-
 COPY --chmod=755 entrypoint.sh /usr/local/bin/entrypoint.sh
-
-USER claude
-RUN mkdir -p /home/claude/.claude
 
 ENTRYPOINT ["entrypoint.sh"]

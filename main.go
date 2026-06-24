@@ -132,16 +132,8 @@ func buildCmd() *cobra.Command {
 		Use:   "build",
 		Short: "Build the container image",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			uid := os.Getuid()
-			gid := os.Getgid()
-			fmt.Printf("Building %s image (UID=%d, GID=%d)...\n", imageName, uid, gid)
-			return runPodman(
-				"build",
-				"--build-arg", fmt.Sprintf("USER_UID=%d", uid),
-				"--build-arg", fmt.Sprintf("USER_GID=%d", gid),
-				"-t", imageName,
-				binaryDir(),
-			)
+			fmt.Printf("Building %s image...\n", imageName)
+			return runPodman("build", "-t", imageName, binaryDir())
 		},
 	}
 }
@@ -306,12 +298,7 @@ func runCmd() *cobra.Command {
 
 			if err := exec.Command("podman", "image", "exists", imageName).Run(); err != nil {
 				fmt.Printf("Image '%s' not found. Building...\n", imageName)
-				uid := os.Getuid()
-				gid := os.Getgid()
-				if err := runPodman("build",
-					"--build-arg", fmt.Sprintf("USER_UID=%d", uid),
-					"--build-arg", fmt.Sprintf("USER_GID=%d", gid),
-					"-t", imageName, binaryDir()); err != nil {
+				if err := runPodman("build", "-t", imageName, binaryDir()); err != nil {
 					return err
 				}
 			}
@@ -351,7 +338,6 @@ func runCmd() *cobra.Command {
 
 			podmanArgs := []string{
 				"run", "--rm", "-it",
-				"--userns=keep-id",
 				"--name", containerName,
 				"--env-file", envFile,
 				"-v", profileDir + ":/ccs-profile:ro",
@@ -376,7 +362,7 @@ func runCmd() *cobra.Command {
 				home, _ := os.UserHomeDir()
 				gcloudDir := filepath.Join(home, ".config", "gcloud")
 				if _, err := os.Stat(gcloudDir); err == nil {
-					podmanArgs = append(podmanArgs, "-v", gcloudDir+":/home/claude/.config/gcloud:ro")
+					podmanArgs = append(podmanArgs, "-v", gcloudDir+":/root/.config/gcloud:ro")
 				}
 			}
 

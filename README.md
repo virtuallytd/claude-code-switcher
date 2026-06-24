@@ -16,7 +16,9 @@ A CLI tool for running [Claude Code](https://claude.ai/code) in isolated Podman 
 ### Homebrew
 
 ```bash
-brew install virtuallytd/tap/claude-code-switcher
+brew tap virtuallytd/tap
+brew trust --formula virtuallytd/tap/claude-code-switcher
+brew install claude-code-switcher
 ```
 
 ### From Source
