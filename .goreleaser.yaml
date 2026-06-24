@@ -18,8 +18,10 @@ archives:
   - formats: [tar.gz]
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     files:
-      - Containerfile
-      - entrypoint.sh
+      - src: container/Containerfile
+        dst: .
+      - src: container/entrypoint.sh
+        dst: .
       - README.md
       - LICENSE
 
