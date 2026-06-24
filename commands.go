@@ -246,7 +246,7 @@ func runCmd() *cobra.Command {
 				home, _ := os.UserHomeDir()
 				gcloudDir := filepath.Join(home, ".config", "gcloud")
 				if _, err := os.Stat(gcloudDir); err == nil {
-					podmanArgs = append(podmanArgs, "-v", gcloudDir+":/root/.config/gcloud:ro")
+					podmanArgs = append(podmanArgs, "-v", gcloudDir+":/root/.config/gcloud")
 				}
 			}
 
