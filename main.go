@@ -31,7 +31,19 @@ func binaryDir() string {
 		wd, _ := os.Getwd()
 		return wd
 	}
-	return filepath.Dir(exe)
+	resolved, err := filepath.EvalSymlinks(exe)
+	if err != nil {
+		return filepath.Dir(exe)
+	}
+	dir := filepath.Dir(resolved)
+	// Homebrew installs the binary in <prefix>/bin/ and support files in <prefix>/
+	if filepath.Base(dir) == "bin" {
+		parent := filepath.Dir(dir)
+		if _, err := os.Stat(filepath.Join(parent, "Containerfile")); err == nil {
+			return parent
+		}
+	}
+	return dir
 }
 
 func runPodman(args ...string) error {
