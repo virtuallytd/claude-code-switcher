@@ -40,11 +40,12 @@ func containerDir() string {
 		return sub
 	}
 
-	// Homebrew: binary is in <prefix>/bin/, Containerfile is in <prefix>/
+	// Homebrew: binary is in <prefix>/bin/, container files are in <prefix>/container/
 	if filepath.Base(dir) == "bin" {
 		parent := filepath.Dir(dir)
-		if _, err := os.Stat(filepath.Join(parent, "Containerfile")); err == nil {
-			return parent
+		sub := filepath.Join(parent, "container")
+		if _, err := os.Stat(filepath.Join(sub, "Containerfile")); err == nil {
+			return sub
 		}
 	}
 
