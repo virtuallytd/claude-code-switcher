@@ -197,7 +197,7 @@ func runCmd() *cobra.Command {
 					parsingClaudeArgs = true
 					continue
 				}
-				if parsingClaudeArgs {
+				if parsingClaudeArgs || strings.HasPrefix(a, "-") {
 					claudeArgs = append(claudeArgs, a)
 				} else if projectPath == "" {
 					projectPath = a
