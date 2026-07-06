@@ -106,11 +106,10 @@ func initCmd() *cobra.Command {
 
 			reader := bufio.NewReader(os.Stdin)
 
-			fmt.Print("Auth type (api/vertex): ")
+			fmt.Print("Auth type (claude/api/vertex): ")
 			authType, _ := reader.ReadString('\n')
 			authType = strings.TrimSpace(authType)
 
-			var envContent string
 			switch authType {
 			case "vertex":
 				fmt.Print("Vertex project ID: ")
@@ -124,15 +123,19 @@ func initCmd() *cobra.Command {
 					region = "global"
 				}
 
-				envContent = fmt.Sprintf("CLAUDE_CODE_USE_VERTEX=1\nCLOUD_ML_REGION=%s\nANTHROPIC_VERTEX_PROJECT_ID=%s\n", region, projectID)
-			default:
+				envContent := fmt.Sprintf("CLAUDE_CODE_USE_VERTEX=1\nCLOUD_ML_REGION=%s\nANTHROPIC_VERTEX_PROJECT_ID=%s\n", region, projectID)
+				os.WriteFile(filepath.Join(dir, ".env"), []byte(envContent), 0600)
+			case "api":
 				fmt.Print("Anthropic API key: ")
 				apiKey, _ := reader.ReadString('\n')
 				apiKey = strings.TrimSpace(apiKey)
-				envContent = fmt.Sprintf("ANTHROPIC_API_KEY=%s\n", apiKey)
+				envContent := fmt.Sprintf("ANTHROPIC_API_KEY=%s\n", apiKey)
+				os.WriteFile(filepath.Join(dir, ".env"), []byte(envContent), 0600)
+			case "claude":
+				fmt.Println("You'll be prompted to log in on first launch.")
+			default:
+				fmt.Println("You'll be prompted to log in on first launch.")
 			}
-
-			os.WriteFile(filepath.Join(dir, ".env"), []byte(envContent), 0600)
 
 			fmt.Print("Model [claude-sonnet-4-6]: ")
 			model, _ := reader.ReadString('\n')
@@ -177,9 +180,6 @@ func runCmd() *cobra.Command {
 			}
 
 			envFile := filepath.Join(profileDir, ".env")
-			if _, err := os.Stat(envFile); os.IsNotExist(err) {
-				return fmt.Errorf("%s not found", envFile)
-			}
 
 			if err := exec.Command("podman", "image", "exists", imageName).Run(); err != nil {
 				fmt.Printf("Image '%s' not found. Building...\n", imageName)
@@ -221,13 +221,20 @@ func runCmd() *cobra.Command {
 				os.WriteFile(emptyMCP, []byte("{\"mcpServers\":{}}\n"), 0644)
 			}
 
+			authDir := filepath.Join(profileDir, ".auth")
+			os.MkdirAll(authDir, 0700)
+
 			podmanArgs := []string{
 				"run", "--rm", "-it",
 				"--name", containerName,
-				"--env-file", envFile,
+				"-v", authDir + ":/root/.claude",
 				"-v", profileDir + ":/ccs-profile:ro",
 				"-v", projectPath + ":" + projectPath,
 				"-w", projectPath,
+			}
+
+			if _, err := os.Stat(envFile); err == nil {
+				podmanArgs = append(podmanArgs, "--env-file", envFile)
 			}
 
 			mcpFile := filepath.Join(profileDir, "mcp.json")
