@@ -74,11 +74,11 @@ func profilesCmd() *cobra.Command {
 
 			fmt.Println("Available profiles:")
 			for _, e := range entries {
-				if !e.IsDir() {
+				if !e.IsDir() || strings.HasPrefix(e.Name(), ".") {
 					continue
 				}
-				envPath := filepath.Join(profilesDir(), e.Name(), ".env")
-				if _, err := os.Stat(envPath); err == nil {
+				settingsPath := filepath.Join(profilesDir(), e.Name(), "settings.json")
+				if _, err := os.Stat(settingsPath); err == nil {
 					fmt.Printf("  %s\n", e.Name())
 				}
 			}
@@ -224,10 +224,14 @@ func runCmd() *cobra.Command {
 			authDir := filepath.Join(profileDir, ".auth")
 			os.MkdirAll(authDir, 0700)
 
+			keyringDir := filepath.Join(profileDir, ".keyring")
+			os.MkdirAll(keyringDir, 0700)
+
 			podmanArgs := []string{
 				"run", "--rm", "-it",
 				"--name", containerName,
 				"-v", authDir + ":/root/.claude",
+				"-v", keyringDir + ":/root/.local/share/keyrings",
 				"-v", profileDir + ":/ccs-profile:ro",
 				"-v", projectPath + ":" + projectPath,
 				"-w", projectPath,
