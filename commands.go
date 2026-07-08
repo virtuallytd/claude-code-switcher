@@ -132,9 +132,9 @@ func initCmd() *cobra.Command {
 				envContent := fmt.Sprintf("ANTHROPIC_API_KEY=%s\n", apiKey)
 				os.WriteFile(filepath.Join(dir, ".env"), []byte(envContent), 0600)
 			case "claude":
-				fmt.Println("You'll be prompted to log in on first launch.")
+				fmt.Printf("Run 'ccs login %s' after setup to authenticate.\n", name)
 			default:
-				fmt.Println("You'll be prompted to log in on first launch.")
+				fmt.Printf("Run 'ccs login %s' after setup to authenticate.\n", name)
 			}
 
 			fmt.Print("Model [claude-sonnet-4-6]: ")
@@ -159,6 +159,78 @@ func initCmd() *cobra.Command {
 			fmt.Printf("\nProfile '%s' created at %s\n", name, dir)
 			fmt.Println("To add MCP servers, create mcp.json in that directory.")
 			fmt.Printf("Launch with: ccs %s /path/to/project\n", name)
+			return nil
+		},
+	}
+}
+
+func loginCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "login <profile>",
+		Short: "Authenticate a profile with Claude Pro/Team via OAuth",
+		Long: `Runs 'claude setup-token' in a temporary container to generate a
+long-lived OAuth token, then saves it to the profile for future sessions.
+
+For API key or Vertex profiles, set credentials directly in <profile>/.env instead.`,
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			profile := args[0]
+			profileDir := filepath.Join(profilesDir(), profile)
+			if _, err := os.Stat(profileDir); os.IsNotExist(err) {
+				return fmt.Errorf("profile '%s' not found in %s/", profile, profilesDir())
+			}
+
+			if err := exec.Command("podman", "image", "exists", imageName).Run(); err != nil {
+				fmt.Printf("Image '%s' not found. Building...\n", imageName)
+				if err := runPodman("build", "-t", imageName, containerDir()); err != nil {
+					return err
+				}
+			}
+
+			containerName := fmt.Sprintf("%s-%s-login-%s", containerPrefix, profile, randSuffix())
+
+			fmt.Println("Starting OAuth login flow...")
+			fmt.Println("Complete the authentication in your browser, then copy the token shown.")
+			fmt.Println()
+
+			loginArgs := []string{
+				"run", "--rm", "-it",
+				"--name", containerName,
+				imageName, "setup-token",
+			}
+			runPodman(loginArgs...)
+
+			fmt.Println()
+			fmt.Print("Paste the token here: ")
+			reader := bufio.NewReader(os.Stdin)
+			token, _ := reader.ReadString('\n')
+			token = strings.TrimSpace(token)
+
+			if token == "" {
+				return fmt.Errorf("no token provided")
+			}
+
+			envFile := filepath.Join(profileDir, ".env")
+			envLines := []string{}
+
+			if data, err := os.ReadFile(envFile); err == nil {
+				for _, line := range strings.Split(string(data), "\n") {
+					trimmed := strings.TrimSpace(line)
+					if trimmed != "" && !strings.HasPrefix(trimmed, "CLAUDE_CODE_OAUTH_TOKEN=") {
+						envLines = append(envLines, line)
+					}
+				}
+			}
+
+			envLines = append(envLines, "CLAUDE_CODE_OAUTH_TOKEN="+token)
+			content := strings.Join(envLines, "\n") + "\n"
+
+			if err := os.WriteFile(envFile, []byte(content), 0600); err != nil {
+				return fmt.Errorf("failed to save token: %w", err)
+			}
+
+			fmt.Printf("Token saved to %s\n", envFile)
+			fmt.Printf("Run 'ccs %s <path>' to start using Claude Code.\n", profile)
 			return nil
 		},
 	}
@@ -221,17 +293,13 @@ func runCmd() *cobra.Command {
 				os.WriteFile(emptyMCP, []byte("{\"mcpServers\":{}}\n"), 0644)
 			}
 
-			authDir := filepath.Join(profileDir, ".auth")
-			os.MkdirAll(authDir, 0700)
-
-			keyringDir := filepath.Join(profileDir, ".keyring")
-			os.MkdirAll(keyringDir, 0700)
+			claudeHome := filepath.Join(profileDir, ".claude-home")
+			os.MkdirAll(claudeHome, 0700)
 
 			podmanArgs := []string{
 				"run", "--rm", "-it",
 				"--name", containerName,
-				"-v", authDir + ":/root/.claude",
-				"-v", keyringDir + ":/root/.local/share/keyrings",
+				"-v", claudeHome + ":/root/.claude",
 				"-v", profileDir + ":/ccs-profile:ro",
 				"-v", projectPath + ":" + projectPath,
 				"-w", projectPath,

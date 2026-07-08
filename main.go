@@ -26,9 +26,10 @@ func main() {
 	root.AddCommand(statusCmd())
 	root.AddCommand(profilesCmd())
 	root.AddCommand(initCmd())
+	root.AddCommand(loginCmd())
 	root.AddCommand(runCmd())
 
-	knownCmds := map[string]bool{"build": true, "stop": true, "status": true, "profiles": true, "init": true, "run": true, "help": true, "completion": true}
+	knownCmds := map[string]bool{"build": true, "stop": true, "status": true, "profiles": true, "init": true, "login": true, "run": true, "help": true, "completion": true}
 	if len(os.Args) > 1 && !knownCmds[os.Args[1]] && !strings.HasPrefix(os.Args[1], "-") {
 		os.Args = append([]string{os.Args[0], "run"}, os.Args[1:]...)
 	}
