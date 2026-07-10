@@ -9,4 +9,14 @@ if [ -f /ccs-profile/mcp.json ]; then
   cp /ccs-profile/mcp.json "$(pwd)/.mcp.json"
 fi
 
+# Restore .claude.json from backup if it doesn't exist.
+# Claude Code stores this at ~/.claude.json (outside ~/.claude/) so it doesn't
+# survive container restarts. Backups are inside ~/.claude/ which is mounted.
+if [ ! -f "${HOME}/.claude.json" ]; then
+  latest=$(ls -t "${CLAUDE_HOME}/backups/.claude.json.backup."* 2>/dev/null | head -1)
+  if [ -n "$latest" ]; then
+    cp "$latest" "${HOME}/.claude.json"
+  fi
+fi
+
 exec claude "$@"
