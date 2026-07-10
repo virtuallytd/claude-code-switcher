@@ -309,6 +309,10 @@ func runCmd() *cobra.Command {
 				podmanArgs = append(podmanArgs, "--env-file", envFile)
 			}
 
+			if token := envFileValue(envFile, "CLAUDE_CODE_OAUTH_TOKEN"); token != "" {
+				podmanArgs = append(podmanArgs, "-e", "CLAUDE_CODE_OAUTH_TOKEN="+token)
+			}
+
 			mcpFile := filepath.Join(profileDir, "mcp.json")
 			if _, err := os.Stat(mcpFile); err == nil {
 				dir := filepath.Dir(projectPath)

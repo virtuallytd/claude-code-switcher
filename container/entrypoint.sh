@@ -19,4 +19,13 @@ if [ ! -f "${HOME}/.claude.json" ]; then
   fi
 fi
 
+# Write the OAuth token to Claude Code's credential store so it recognizes
+# the session as authenticated without going through the interactive login flow.
+if [ -n "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
+  cat > "${CLAUDE_HOME}/.credentials.json" <<EOF
+{"claudeAiOauth":{"accessToken":"${CLAUDE_CODE_OAUTH_TOKEN}","refreshToken":"","scopes":["user:inference"]}}
+EOF
+  chmod 600 "${CLAUDE_HOME}/.credentials.json"
+fi
+
 exec claude "$@"

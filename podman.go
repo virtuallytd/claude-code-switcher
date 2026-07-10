@@ -66,20 +66,24 @@ func podmanOutput(args ...string) (string, error) {
 }
 
 func envFileContains(path, key string) bool {
+	v := envFileValue(path, key)
+	return v == "1" || v == "true"
+}
+
+func envFileValue(path, key string) string {
 	f, err := os.Open(path)
 	if err != nil {
-		return false
+		return ""
 	}
 	defer f.Close()
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if strings.HasPrefix(line, key+"=") {
-			val := strings.TrimPrefix(line, key+"=")
-			return val == "1" || val == "true"
+			return strings.TrimPrefix(line, key+"=")
 		}
 	}
-	return false
+	return ""
 }
 
 func fileContainsString(path, substr string) bool {
